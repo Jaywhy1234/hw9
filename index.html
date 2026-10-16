@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英語單字片語發音跟讀練習 (English Pronunciation Trainer)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .pulse-recording {
+            animation: pulse-red 1.5s infinite;
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-sky-500 text-white flex items-center justify-center font-bold text-xl shadow-md">
+                    <i class="fa-solid font-microphone"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-slate-800 leading-tight">英語發音跟讀練習</h1>
+                    <p class="text-xs text-slate-500">English Speech Recognition & Pronunciation</p>
+                </div>
+            </div>
+            
+            <button id="deployGuideBtn" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 px-3 rounded-lg transition-colors flex items-center space-x-1">
+                <i class="fa-brands fa-github text-sm"></i>
+                <span class="hidden sm:inline">部署到 GitHub Pages</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-6 flex-grow w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left Column: Word Categories & List (4 cols) -->
+        <section class="lg:col-span-4 flex flex-col space-y-4">
+            
+            <!-- Category Tabs -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">選擇練習分類</label>
+                <select id="categorySelect" class="w-full bg-slate-50 border border-slate-200 text-slate-700 font-medium rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                    <option value="basic">🌱 基礎常用單字 (Basic Words)</option>
+                    <option value="phrases">💬 日常常用片語 (Daily Phrases)</option>
+                    <option value="business">💼 商務職場英語 (Business English)</option>
+                    <option value="travel">✈️ 旅遊對話語句 (Travel Expressions)</option>
+                </select>
+            </div>
+
+            <!-- Words List Panel -->
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm flex-grow flex flex-col overflow-hidden max-h-[500px] lg:max-h-[calc(100vh-250px)]">
+                <div class="p-3 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">單字清單 (<span id="wordCount">0</span>)</span>
+                    <span class="text-xs text-slate-400">點擊切換項目</span>
+                </div>
+                <div id="wordList" class="divide-y divide-slate-100 overflow-y-auto custom-scrollbar flex-grow">
+                    <!-- Word list dynamic content -->
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Right Column: Interactive Practice Card & Detailed Stats (8 cols) -->
+        <section class="lg:col-span-8 flex flex-col space-y-6">
+
+            <!-- Stats Bar -->
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-list-check"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500 font-medium">總練習次數</div>
+                        <div id="statTotal" class="text-xl font-bold text-slate-800">0</div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500 font-medium">發音正確率</div>
+                        <div id="statAccuracy" class="text-xl font-bold text-emerald-600">0%</div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500 font-medium">完全正確數</div>
+                        <div id="statCorrect" class="text-xl font-bold text-amber-600">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl border border-slate-200/80 shadow-md p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden min-h-[380px]">
+                
+                <!-- Status Badge Header -->
+                <div class="flex justify-between items-center mb-6">
+                    <span id="categoryBadge" class="bg-sky-50 text-sky-700 text-xs font-semibold px-3 py-1 rounded-full border border-sky-100">
+                        基礎單字
+                    </span>
+                    <div class="flex items-center space-x-2">
+                        <label for="voiceAccent" class="text-xs text-slate-400">口音:</label>
+                        <select id="voiceAccent" class="text-xs bg-slate-50 border border-slate-200 text-slate-600 rounded-lg p-1.5 focus:outline-none">
+                            <option value="en-US">🇺🇸 美式英語 (en-US)</option>
+                            <option value="en-GB">🇬🇧 英式英語 (en-GB)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Word Display Area -->
+                <div class="text-center my-auto py-4">
+                    <div class="inline-flex items-center space-x-3 group">
+                        <h2 id="targetWord" class="text-3xl sm:text-5xl font-extrabold text-slate-800 tracking-tight">
+                            Loading...
+                        </h2>
+                        <button id="playTargetAudio" class="w-12 h-12 rounded-full bg-sky-50 hover:bg-sky-500 text-sky-600 hover:text-white transition-all shadow-sm flex items-center justify-center text-lg focus:outline-none focus:ring-2 focus:ring-sky-400">
+                            <i class="fa-solid fa-volume-high"></i>
+                        </button>
+                    </div>
+                    <p id="targetTranslation" class="text-slate-500 font-medium text-lg mt-2">
+                        --
+                    </p>
+                    <p id="targetPhonetic" class="text-xs text-slate-400 font-mono mt-1">
+                        --
+                    </p>
+                </div>
+
+                <!-- Speech Recognition Feedback Area -->
+                <div class="mt-6 pt-6 border-t border-slate-100">
+                    <div class="text-center mb-6 min-h-[60px] flex flex-col justify-center items-center">
+                        <p class="text-xs text-slate-400 mb-1">辨識結果 (Your Recognition)</p>
+                        <div id="recognitionResult" class="text-xl font-semibold text-slate-700 italic">
+                            請按下下方按鈕開始跟讀...
+                        </div>
+                        <div id="matchFeedback" class="text-sm font-medium mt-1 h-6">
+                            <!-- Feedback status text (e.g. Excellent / Try again) -->
+                        </div>
+                    </div>
+
+                    <!-- Recording Controls -->
+                    <div class="flex flex-col items-center justify-center">
+                        <button id="recordBtn" class="w-20 h-20 rounded-full bg-sky-500 hover:bg-sky-600 text-white shadow-lg hover:shadow-sky-200 transition-all flex items-center justify-center text-2xl focus:outline-none focus:ring-4 focus:ring-sky-200">
+                            <i id="recordIcon" class="fa-solid fa-microphone"></i>
+                        </button>
+                        <span id="recordStatus" class="text-xs text-slate-500 font-medium mt-2">點擊按鈕開始錄音</span>
+                    </div>
+                </div>
+
+                <!-- Navigation Controls -->
+                <div class="flex justify-between items-center mt-6 pt-4 border-t border-slate-100">
+                    <button id="prevBtn" class="text-sm text-slate-600 hover:text-sky-600 font-medium flex items-center space-x-1 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors">
+                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                        <span>上一個</span>
+                    </button>
+                    <span id="currentIndexText" class="text-xs text-slate-400 font-medium">1 / 10</span>
+                    <button id="nextBtn" class="text-sm text-slate-600 hover:text-sky-600 font-medium flex items-center space-x-1 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors">
+                        <span>下一個</span>
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <div id="deployModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl p-6 sm:p-8">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-4">
+                <div class="flex items-center space-x-2 text-slate-800 font-bold text-lg">
+                    <i class="fa-brands fa-github text-2xl"></i>
+                    <span>部署到 GitHub Pages 教學</span>
+                </div>
+                <button id="closeModalBtn" class="text-slate-400 hover:text-slate-600 p-2 rounded-lg">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-sm text-slate-600 leading-relaxed">
+                <p>只需將本網頁檔案上傳至 GitHub，即可免費擁有屬於自己的英語練習網站！</p>
+                
+                <ol class="list-decimal list-inside space-y-3 font-medium text-slate-700">
+                    <li class="bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+                        <strong>建立儲存庫 (Repository)：</strong>
+                        <p class="text-xs text-slate-500 font-normal mt-1">登入 GitHub，點擊右上角「+」選單選擇「New repository」，庫名填寫例如 <code>english-pronunciation</code>。</p>
+                    </li>
+                    <li class="bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+                        <strong>上傳 HTML 檔案：</strong>
+                        <p class="text-xs text-slate-500 font-normal mt-1">將這個 HTML 檔案命名為 <code class="bg-slate-200 px-1 rounded text-slate-800">index.html</code>，上傳或 Commit 到該 repository 的主分支 (main)。</p>
+                    </li>
+                    <li class="bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+                        <strong>開啟 GitHub Pages 功能：</strong>
+                        <p class="text-xs text-slate-500 font-normal mt-1">進入 Repository 的 <strong>Settings</strong> ➔ 左側選單選 <strong>Pages</strong> ➔ 將 <strong>Source</strong> 設為 <code>Deploy from a branch</code> ➔ Branch 選擇 <code>main</code> 並儲存。</p>
+                    </li>
+                    <li class="bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+                        <strong>開始使用：</strong>
+                        <p class="text-xs text-slate-500 font-normal mt-1">等待 1-2 分鐘後，系統會生成網址：<br><code class="text-sky-600">https://&lt;your-username&gt;.github.io/english-pronunciation/</code></p>
+                    </li>
+                </ol>
+
+                <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-3 text-xs flex space-x-2">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500 text-base flex-shrink-0 mt-0.5"></i>
+                    <div>
+                        <strong>注意事項：</strong> Chrome / Edge 等瀏覽器對 <code>SpeechRecognition</code> 的權限要求較高，必須在 <strong>HTTPS</strong> 環境（GitHub Pages 預設即為 HTTPS）或 <code>localhost</code> 下才能正常開啟麥克風！
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 text-right">
+                <button id="closeModalBtn2" class="bg-slate-800 text-white font-medium px-5 py-2.5 rounded-xl hover:bg-slate-700 transition-colors text-sm">
+                    我知道了
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const wordData = {
+            basic: [
+                { word: "Opportunity", translation: "機會；時機", phonetic: "/ˌɑːpərˈtuːnəti/" },
+                { word: "Improvement", translation: "改善；提升", phonetic: "/ɪmˈpruːvmənt/" },
+                { word: "Confidence", translation: "信心；自信", phonetic: "/ˈkɑːnfɪdəns/" },
+                { word: "Vocabulary", translation: "字彙；詞彙", phonetic: "/vəˈkæbjəleri/" },
+                { word: "Pronunciation", translation: "發音", phonetic: "/prəˌnʌnsiˈeɪʃn/" },
+                { word: "Communication", translation: "溝通；交流", phonetic: "/kəˌmjuːnɪˈkeɪʃn/" },
+                { word: "Knowledge", translation: "知識", phonetic: "/ˈnɑːlɪdʒ/" },
+                { word: "Practice", translation: "練習；實踐", phonetic: "/ˈpræktɪs/" }
+            ],
+            phrases: [
+                { word: "Practice makes perfect", translation: "熟能生巧", phonetic: "句" },
+                { word: "How is it going?", translation: "最近怎麼樣？", phonetic: "句" },
+                { word: "Nice to meet you", translation: "很高興認識你", phonetic: "句" },
+                { word: "Have a good day", translation: "祝你有美好的一天", phonetic: "句" },
+                { word: "Take it easy", translation: "放輕鬆；別緊張", phonetic: "句" },
+                { word: "Looking forward to it", translation: "非常期待", phonetic: "句" }
+            ],
+            business: [
+                { word: "Schedule a meeting", translation: "安排會議", phonetic: "片語" },
+                { word: "Bottom line", translation: "底線；核心結論", phonetic: "片語" },
+                { word: "Win-win situation", translation: "雙贏局面", phonetic: "片語" },
+                { word: "Action plan", translation: "行動方案", phonetic: "片語" },
+                { word: "Deadline", translation: "截止日期", phonetic: "單字" },
+                { word: "Brainstorming", translation: "腦力激盪", phonetic: "單字" }
+            ],
+            travel: [
+                { word: "Where is the bathroom?", translation: "洗手間在哪裡？", phonetic: "句" },
+                { word: "How much is this?", translation: "這個多少錢？", phonetic: "句" },
+                { word: "Check in, please", translation: "麻煩辦理入住", phonetic: "句" },
+                { word: "Boarding pass", translation: "登機證", phonetic: "片語" },
+                { word: "Baggage claim", translation: "行李轉盤處", phonetic: "片語" }
+            ]
+        };
+
+        let currentCategory = 'basic';
+        let currentIndex = 0;
+        let isRecording = false;
+        let recognition = null;
+        
+        // Practice Stats State
+        let stats = {
+            totalAttempts: 0,
+            correctCount: 0,
+            accuracySum: 0
+        };
+
+        const categorySelect = document.getElementById('categorySelect');
+        const wordListEl = document.getElementById('wordList');
+        const wordCountEl = document.getElementById('wordCount');
+        const targetWordEl = document.getElementById('targetWord');
+        const targetTranslationEl = document.getElementById('targetTranslation');
+        const targetPhoneticEl = document.getElementById('targetPhonetic');
+        const categoryBadgeEl = document.getElementById('categoryBadge');
+        const currentIndexTextEl = document.getElementById('currentIndexText');
+        
+        const playTargetAudioBtn = document.getElementById('playTargetAudio');
+        const recordBtn = document.getElementById('recordBtn');
+        const recordIcon = document.getElementById('recordIcon');
+        const recordStatus = document.getElementById('recordStatus');
+        const recognitionResultEl = document.getElementById('recognitionResult');
+        const matchFeedbackEl = document.getElementById('matchFeedback');
+        const voiceAccentSelect = document.getElementById('voiceAccent');
+
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        const statTotalEl = document.getElementById('statTotal');
+        const statAccuracyEl = document.getElementById('statAccuracy');
+        const statCorrectEl = document.getElementById('statCorrect');
+
+        const deployGuideBtn = document.getElementById('deployGuideBtn');
+        const deployModal = document.getElementById('deployModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const closeModalBtn2 = document.getElementById('closeModalBtn2');
+
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            if (!SpeechRecognition) {
+                recognitionResultEl.innerHTML = `<span class="text-red-500 text-sm">您的瀏覽器不支援 SpeechRecognition 語音辨識（建議使用 Chrome 或 Edge 瀏覽器）。</span>`;
+                recordBtn.disabled = true;
+                recordBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                return null;
+            }
+
+            const rec = new SpeechRecognition();
+            rec.continuous = false;
+            rec.interimResults = false;
+            rec.lang = voiceAccentSelect.value;
+
+            rec.onstart = () => {
+                isRecording = true;
+                recordBtn.classList.add('bg-red-500', 'pulse-recording');
+                recordBtn.classList.remove('bg-sky-500');
+                recordIcon.className = 'fa-solid fa-stop';
+                recordStatus.textContent = '聆聽中...請清楚唸出單字';
+                recognitionResultEl.textContent = '正在辨識語音...';
+                matchFeedbackEl.textContent = '';
+            };
+
+            rec.onresult = (event) => {
+                const spokenText = event.results[0][0].transcript;
+                evaluatePronunciation(spokenText);
+            };
+
+            rec.onerror = (event) => {
+                console.error("Speech Recognition Error: ", event.error);
+                stopRecordingState();
+                if (event.error === 'no-speech') {
+                    recognitionResultEl.textContent = '未偵測到聲音，請再試一次。';
+                } else if (event.error === 'not-allowed') {
+                    recognitionResultEl.innerHTML = `<span class="text-red-500 text-sm">無法存取麥克風，請檢查瀏覽器麥克風權限設定。</span>`;
+                } else {
+                    recognitionResultEl.textContent = `辨識發生錯誤: ${event.error}`;
+                }
+            };
+
+            rec.onend = () => {
+                stopRecordingState();
+            };
+
+            return rec;
+        }
+
+        function stopRecordingState() {
+            isRecording = false;
+            recordBtn.classList.remove('bg-red-500', 'pulse-recording');
+            recordBtn.classList.add('bg-sky-500');
+            recordIcon.className = 'fa-solid fa-microphone';
+            recordStatus.textContent = '點擊按鈕開始錄音';
+        }
+
+        function playTTS(text) {
+            if (!('speechSynthesis' in window)) {
+                alert('您的瀏覽器不支援語音合成播放。');
+                return;
+            }
+            window.speechSynthesis.cancel(); // Stop any ongoing speech
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = voiceAccentSelect.value;
+            utterance.rate = 0.9; // Slightly slower for language learners
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function evaluatePronunciation(spokenText) {
+            const currentItem = wordData[currentCategory][currentIndex];
+            const targetStr = normalizeString(currentItem.word);
+            const spokenStr = normalizeString(spokenText);
+
+            // Similarity Calculation (Levenshtein Distance based percentage)
+            const similarity = calculateSimilarity(targetStr, spokenStr);
+            const isMatch = similarity >= 80;
+
+            // Update UI with speech result
+            recognitionResultEl.innerHTML = `"${spokenText}"`;
+
+            // Update Stats
+            stats.totalAttempts++;
+            stats.accuracySum += similarity;
+            if (isMatch) stats.correctCount++;
+
+            updateStatsUI();
+
+            // Display Visual Feedback
+            if (similarity >= 90) {
+                matchFeedbackEl.innerHTML = `<span class="text-emerald-600 font-bold"><i class="fa-solid fa-circle-check"></i> 發音非常標準！ (${similarity}% 相似度)</span>`;
+            } else if (similarity >= 70) {
+                matchFeedbackEl.innerHTML = `<span class="text-amber-600 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> 很接近了！ (${similarity}% 相似度)</span>`;
+            } else {
+                matchFeedbackEl.innerHTML = `<span class="text-rose-600 font-bold"><i class="fa-solid fa-circle-xmark"></i> 再試一次 (${similarity}% 相似度)</span>`;
+            }
+        }
+
+        // String helper: Remove punctuation & uppercase
+        function normalizeString(str) {
+            return str.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()?]/g, "").trim();
+        }
+
+        // Levenshtein Distance similarity formula
+        function calculateSimilarity(s1, s2) {
+            if (s1 === s2) return 100;
+            if (!s1.length || !s2.length) return 0;
+
+            const editDistance = levenshtein(s1, s2);
+            const maxLength = Math.max(s1.length, s2.length);
+            const similarity = ((maxLength - editDistance) / maxLength) * 100;
+            return Math.round(similarity);
+        }
+
+        function levenshtein(a, b) {
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+            for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
+        function renderWordList() {
+            const list = wordData[currentCategory];
+            wordCountEl.textContent = list.length;
+            wordListEl.innerHTML = '';
+
+            list.forEach((item, index) => {
+                const isActive = index === currentIndex;
+                const itemEl = document.createElement('div');
+                itemEl.className = `p-3 cursor-pointer transition-colors flex justify-between items-center ${
+                    isActive ? 'bg-sky-50/80 border-l-4 border-sky-500 font-medium' : 'hover:bg-slate-50'
+                }`;
+                itemEl.innerHTML = `
+                    <div>
+                        <div class="text-sm ${isActive ? 'text-sky-700 font-bold' : 'text-slate-800'}">${item.word}</div>
+                        <div class="text-xs text-slate-400">${item.translation}</div>
+                    </div>
+                    <button class="play-item-btn text-slate-400 hover:text-sky-600 p-2" data-index="${index}">
+                        <i class="fa-solid fa-volume-low"></i>
+                    </button>
+                `;
+
+                itemEl.addEventListener('click', (e) => {
+                    if (!e.target.closest('.play-item-btn')) {
+                        currentIndex = index;
+                        updateDisplay();
+                    }
+                });
+
+                itemEl.querySelector('.play-item-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    playTTS(item.word);
+                });
+
+                wordListEl.appendChild(itemEl);
+            });
+        }
+
+        function updateDisplay() {
+            const list = wordData[currentCategory];
+            const currentItem = list[currentIndex];
+
+            targetWordEl.textContent = currentItem.word;
+            targetTranslationEl.textContent = currentItem.translation;
+            targetPhoneticEl.textContent = currentItem.phonetic;
+            currentIndexTextEl.textContent = `${currentIndex + 1} / ${list.length}`;
+
+            // Reset Feedback UI
+            recognitionResultEl.textContent = '請按下下方按鈕開始跟讀...';
+            matchFeedbackEl.textContent = '';
+
+            // Update badge text
+            const categoryNames = {
+                basic: '基礎單字',
+                phrases: '日常片語',
+                business: '商務英語',
+                travel: '旅遊語句'
+            };
+            categoryBadgeEl.textContent = categoryNames[currentCategory];
+
+            // Update active list item
+            renderWordList();
+        }
+
+        function updateStatsUI() {
+            statTotalEl.textContent = stats.totalAttempts;
+            statCorrectEl.textContent = stats.correctCount;
+            const avgAccuracy = stats.totalAttempts > 0 
+                ? Math.round(stats.accuracySum / stats.totalAttempts) 
+                : 0;
+            statAccuracyEl.textContent = `${avgAccuracy}%`;
+        }
+
+        categorySelect.addEventListener('change', (e) => {
+            currentCategory = e.target.value;
+            currentIndex = 0;
+            updateDisplay();
+        });
+
+        playTargetAudioBtn.addEventListener('click', () => {
+            const currentItem = wordData[currentCategory][currentIndex];
+            playTTS(currentItem.word);
+        });
+
+        recordBtn.addEventListener('click', () => {
+            if (!recognition) {
+                recognition = initSpeechRecognition();
+            }
+            if (!recognition) return;
+
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                recognition.lang = voiceAccentSelect.value;
+                try {
+                    recognition.start();
+                } catch (err) {
+                    console.error("Start recording error:", err);
+                }
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            const list = wordData[currentCategory];
+            currentIndex = (currentIndex - 1 + list.length) % list.length;
+            updateDisplay();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            const list = wordData[currentCategory];
+            currentIndex = (currentIndex + 1) % list.length;
+            updateDisplay();
+        });
+
+        voiceAccentSelect.addEventListener('change', () => {
+            if (recognition) {
+                recognition.lang = voiceAccentSelect.value;
+            }
+        });
+
+        // GitHub Modal triggers
+        deployGuideBtn.addEventListener('click', () => deployModal.classList.remove('hidden'));
+        closeModalBtn.addEventListener('click', () => deployModal.classList.add('hidden'));
+        closeModalBtn2.addEventListener('click', () => deployModal.classList.add('hidden'));
+        deployModal.addEventListener('click', (e) => {
+            if (e.target === deployModal) deployModal.classList.add('hidden');
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            recognition = initSpeechRecognition();
+            updateDisplay();
+        });
+    </script>
+</body>
+</html>
